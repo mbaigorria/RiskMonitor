@@ -52,7 +52,7 @@ priceCheck = true;       % automatic price verification
 
 mkdir('cache')
 mkdir('validation');
-mkdir('report');
+mkdir('report/tables/');
 mkdir('LaTeX/corn/images/');
 mkdir('LaTeX/corn/tables/');
 mkdir('LaTeX/corn/data/');
@@ -959,6 +959,12 @@ fprintf(fileID, strcat('\\input{data/data', int2str(selectOption),'.txt \n}', ..
 'All changes are computed taking the expected future price as a start point. \n', ...
 '\\newpage \n\n'));
 fclose(fileID);
+
+% save arrays as csv files for final CIF report
+filename = strcat('report/tables/', assetType, '-', int2str(k), '-', lower(expirationMonth), '_drop');
+csvwrite(filename, tableDrop_metricTon)
+filename = strcat('report/tables/', assetType, '-', int2str(k), '-', lower(expirationMonth), '_increase');
+csvwrite(filename, tableIncrease_metricTon)
 
 % save files for latex report
 fileID = fopen(strcat('LaTeX/', assetType,'/data/data',int2str(selectOption),'.txt'), 'w');

@@ -1,0 +1,5 @@
+Vencimientos
+
+Mayo y Diciembre (o Diciembre y Mayo) para maiz
+Mayo y Noviembre (o Noviembre y Mayo) para soja
+Mayo y Diciembre (o Diciembre (Z) y Mayo (K)) para trigo

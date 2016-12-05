@@ -961,9 +961,9 @@ fprintf(fileID, strcat('\\input{data/data', int2str(selectOption),'.txt \n}', ..
 fclose(fileID);
 
 % save arrays as csv files for final CIF report
-filename = strcat('report/tables/', assetType, '-', int2str(k), '-', lower(expirationMonth), '_drop');
+filename = strcat('report/tables/', assetType, '-', int2str(k), '-', lower(expirationMonth), '_drop.csv');
 csvwrite(filename, tableDrop_metricTon)
-filename = strcat('report/tables/', assetType, '-', int2str(k), '-', lower(expirationMonth), '_increase');
+filename = strcat('report/tables/', assetType, '-', int2str(k), '-', lower(expirationMonth), '_increase.csv');
 csvwrite(filename, tableIncrease_metricTon)
 
 % save files for latex report

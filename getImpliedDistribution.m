@@ -224,6 +224,18 @@ end
 
 T = daysForExpiration/250;
 
+% looks like the CME changed, the length of both callData and putData used
+% to be the same for all options. however, looks like this doesnt always
+% hold true. to fix this, we will change callData and putData to correspond
+% to data with the same strike prices, thowing away some data which in
+% general doesnt really change the final outcome.
+if length(callData) ~= length(putData)
+    display('callData length is different than putData length. Fixing...')
+    [~,callIndexes,putIndexes] = intersect(callData(:,1), putData(:,1));
+    callData = callData(callIndexes,:);
+    putData  = putData(putIndexes,:);
+end
+
 %% calculate implied volatility
 for i = 1:length(callData)
 	% call implied volatility

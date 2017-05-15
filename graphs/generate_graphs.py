@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+# Vencimientos
+
+# Mayo y Diciembre (o Diciembre y Mayo) para maiz
+# Mayo y Noviembre (o Noviembre y Mayo) para soja
+# Mayo y Diciembre (o Diciembre (Z) y Mayo (K)) para trigo
+
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.dates as mdates
@@ -32,6 +38,10 @@ def getMonthFromOptionCode(optionCode):
 		return 'Invalid code.' 
 
 def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresholds):
+
+	publishedMonths = {'soybean': ['X','K'], 'corn': ['K','Z'], 'wheat': ['K','Z']}
+
+	if monthCode[0] not in publishedMonths[assetType]: return;
 
 	date_list  = []
 	price_list = []
@@ -85,7 +95,7 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 	axes[0].xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
 	axes[0].xaxis.set_major_locator(mdates.DayLocator(interval=len(date_list)/6))
 	# axes[0].set_xlim(right=base+datetime.timedelta(days=10))
-	axes[0].set_xlim(right=expirationDate)
+	axes[0].set_xlim(left=date_list[0], right=expirationDate)
 
 	priceMargin = 20
 	axes[0].set_ylim(top=max(max(price_list), max(thresholds)+priceMargin))
@@ -108,17 +118,20 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 	bar_handles = []
 	bottom = axes[0].get_ylim()[0]
 
+	# stacked bar width
+	width  = axes[1].get_xlim()[1]
+
 	for i, d in enumerate(thresholds):
-		bar_handles.append(axes[1].bar(0, d - bottom, width=bar_width, color=colors[i%len(colors)], bottom=bottom))
+		bar_handles.append(axes[1].bar(0, d - bottom, width=width, color=colors[i%len(colors)], bottom=bottom))
 		bottom = d
 
-	bar_handles.append(axes[1].bar(0, axes[0].get_ylim()[1] - bottom, width=bar_width, color=colors[(len(thresholds)+1)%len(colors)], bottom=bottom))
+	bar_handles.append(axes[1].bar(0, axes[0].get_ylim()[1] - bottom, width=width, color=colors[(len(thresholds)+1)%len(colors)], bottom=bottom))
 
 	# add bar labels
 	for j in xrange(len(bar_handles)):
 		for i, handle in enumerate(bar_handles[j].get_children()):
 			bl = handle.get_xy()
-			x = 0.5*handle.get_width() + bl[0]
+			x = 0.55*handle.get_width() + bl[0]
 			y = 0.40*handle.get_height() + bl[1]
 			axes[1].text(x,y, "%s chance" % (percentages[j]), ha='center',fontsize=10)
 

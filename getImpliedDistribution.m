@@ -973,6 +973,11 @@ fprintf(fileID, strcat('\\input{data/data', int2str(selectOption),'.txt \n}', ..
 fclose(fileID);
 
 % save arrays as csv files for final CIF report
+matrix2latex(tableIncrease_bushels, strcat('LaTeX/', assetType, '/tables/suba', ...
+    int2str(selectOption),'.txt'), 'columnLabels', columnLabels, 'alignment', 'c', 'format', '%-6.2f');
+
+tableDrop_metricTon(:,2) = ceil(tableDrop_metricTon(:,2)*100)/100;
+tableIncrease_metricTon(:,2) = ceil(tableIncrease_metricTon(:,2)*100)/100;
 filename = strcat('report/tables/', assetType, '-', int2str(k), '-', lower(expirationMonth), '_drop.csv');
 csvwrite(filename, tableDrop_metricTon)
 filename = strcat('report/tables/', assetType, '-', int2str(k), '-', lower(expirationMonth), '_increase.csv');

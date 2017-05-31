@@ -37,6 +37,16 @@ def getMonthFromOptionCode(optionCode):
 	else:
 		return 'Invalid code.' 
 
+def find_between(s, first, last):
+
+	try:
+		start = s.index( first ) + len( first )
+		end = s.index( last, start )
+		return s[start:end]
+	except ValueError:
+		print 'Invalid data.'
+		exit()
+
 def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresholds):
 
 	publishedMonths = {'soybean': ['X','K'], 'corn': ['K','Z'], 'wheat': ['K','Z']}
@@ -60,14 +70,15 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 		print 'File '+filename+' ('+monthCode+') missing.'
 		return
 
-	with open(filename) as prices:    
-	    prices = json.load(prices)
-	    prices = prices['p'][1]['s1']['s']
-	    for priceData in prices:
-	    	timestamp, p_open, p_high, p_low, p_close, vol = priceData['v']
-	    	date = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
-	    	date_list.append(date)
-	    	price_list.append(p_close)
+	with open(filename) as prices:
+		prices = find_between(prices.read(), '~m~{', '~m')
+		prices = json.loads('{'+prices)
+		prices = prices['p'][1]['s1']['s']
+		for priceData in prices:
+			timestamp, p_open, p_high, p_low, p_close, vol = priceData['v']
+			date = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
+			date_list.append(date)
+			price_list.append(p_close)
 	
 	monthToNumber = {v: k for k,v in enumerate(calendar.month_abbr)}
 

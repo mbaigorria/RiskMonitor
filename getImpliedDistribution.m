@@ -50,6 +50,8 @@ dataVerification = true; % outputs verification files
 priceCheck = true;       % automatic price verification
 % end edit parameters
 
+warning off MATLAB:MKDIR:DirectoryExists
+
 mkdir('cache')
 mkdir('validation');
 mkdir('report/tables/');
@@ -64,7 +66,7 @@ mkdir('LaTeX/wheat/tables/');
 mkdir('LaTeX/wheat/data/');
 
 delete('validation/*'); % remove old validation files
-delete('report/*');
+delete('report/tables/*');
 delete('LaTeX/corn/images/*');
 delete('LaTeX/corn/tables/*');
 delete('LaTeX/corn/data/*');

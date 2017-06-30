@@ -31,7 +31,7 @@ function optionData = getDataFromCme(asset, select_option)
     % select_option is an integer used to select the option month to 
     % load the JSON string from.
     if ~isnumeric(select_option)
-        error('Error 1: Invalid parameter: Not numeric.');
+        error('Error: Invalid parameter: Not numeric.');
     end
     
     asset = lower(asset);
@@ -45,11 +45,11 @@ function optionData = getDataFromCme(asset, select_option)
         getHtml = urlread(url, 'Timeout', TIMEOUT);
     catch
         disp(url);
-        error('Error 2: CME seems to be down, failed to retrieve data!');
+        error('Error: CME seems to be down, failed to retrieve data!');
     end
     
     if strfind(getHtml, 'experiencing issues')
-         error('Error 3: We are currently experiencing issues with our weekly options quotes showing stale data. We are working to have this fixed as soon as possible.');
+         error('Error: We are currently experiencing issues with our weekly options quotes showing stale data. We are working to have this fixed as soon as possible.');
     end
 
     % In order to request the JSON price data, we must first build a 
@@ -71,7 +71,7 @@ function optionData = getDataFromCme(asset, select_option)
     try
         rawStruct = loadjson(json);
     catch exception
-        error('Error 4: Unable to load option data from JSON.');
+        error('Error: Unable to load option data from JSON.');
     end
 
     % To unify the criteria to get the data from CME, we have an
@@ -97,7 +97,7 @@ function optionData = getDataFromCme(asset, select_option)
     end
     
     if select_option > length(fieldnames(path))
-        error('Error 5: Non-existent contract selected.');
+        error('Error: Non-existent contract selected.');
     end
     
     % Now that we have the data to build the URL, we must pick a specific
@@ -121,7 +121,7 @@ function optionData = getDataFromCme(asset, select_option)
         jsonString = urlread(url, 'Timeout', TIMEOUT);
     catch
         disp(url);
-        error('Error 6: CME seems to be down, failed to retrieve data!');
+        error('Error: CME seems to be down, failed to retrieve data!');
     end
     
     rawStruct = loadjson(jsonString);
@@ -151,7 +151,7 @@ function optionData = getDataFromCme(asset, select_option)
         expirationDate = urlread(url, 'Timeout', TIMEOUT);
     catch
         disp(url);
-        error('Error 7: CME seems to be down, failed to retrieve data!');
+        error('Error: CME seems to be down, failed to retrieve data!');
     end
     
     from = strcat('<th scope="row">', expiration,'</td>');
@@ -212,6 +212,10 @@ function optionData = getDataFromCme(asset, select_option)
     % filter zero values (CME bug?)
     callData = callData(callData(:,5) > 0, :);
     putData = putData(putData(:,5) > 0, :);
+    
+    if size(callData, 1) < 10
+        error('Error: CME data is too sparse. Last settle data wasnt loaded properly by the CME.');
+    end
     
     optionData = struct('type', product_group, ...
                         'monthCode', monthCode, ...

@@ -25,6 +25,8 @@ import math
 import time
 import requests
 
+import os.path
+
 def roundup(x):
 	return int(math.ceil(x / 100.0)) * 100
 
@@ -179,18 +181,22 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 	# yticks.append(axes[0].get_ylim()[0])
 	axes[1].set_yticks(yticks, minor=False)
 
-
 	plt.subplots_adjust(wspace=0, hspace=0)
 	# plt.show()
 
-	plt.savefig(assetType+'_'+month.lower()+'_'+year +'.png',bbox_inches='tight')
+	basepath = os.path.dirname(__file__)
+	filepath = os.path.abspath(os.path.join(basepath, assetType+'_'+month.lower()+'_'+year +'.png'))
+	plt.savefig(filepath, bbox_inches='tight')
 
 	print 'Graph generated! '+ assetType+'_'+month.lower()+'_'+year
-	print thresholds
 
 if __name__=="__main__":
 
-	csvfile = open('../loadData.csv', 'r')
+	print 'Generating graphs'
+
+	basepath = os.path.dirname(__file__)
+	filepath = os.path.abspath(os.path.join(basepath, '..', 'loadData.csv'))
+	csvfile = open(filepath, 'r')
 	csvreader = csv.reader(csvfile, delimiter=';')
 
 	for row in csvreader:
@@ -199,5 +205,3 @@ if __name__=="__main__":
 		cut_points = data['indicator']['cut_points']
 		thresholds = [price for price, density in cut_points]
 		generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresholds)
-
-	print 'Get any missing data from http://www.cmegroup.com/trading/agricultural/'

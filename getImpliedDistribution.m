@@ -77,6 +77,8 @@ delete('LaTeX/wheat/images/*');
 delete('LaTeX/wheat/tables/*');
 delete('LaTeX/wheat/data/*');
 
+display('Risk Monitor')
+
 % legacy code (everything is computed in bushels anyway)
 selectUnit  = 2;  % 1: metric ton, 2: bushels
 

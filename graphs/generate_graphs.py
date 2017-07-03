@@ -22,6 +22,8 @@ import json
 import os.path
 
 import math
+import time
+import requests
 
 def roundup(x):
 	return int(math.ceil(x / 100.0)) * 100
@@ -47,14 +49,46 @@ def find_between(s, first, last):
 		print 'Invalid data.'
 		exit()
 
+def getPriceSeries(cropCode, monthCode, year, records=120):
+
+	code = str(cropCode)+str(monthCode)+str(year)
+
+	url = 'https://www.barchart.com/proxies/timeseries/queryeod.ashx?symbol='+code+'&data=daily&maxrecords='+str(records)
+	headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+
+	response = requests.get(url, headers=headers)
+
+	dates = []
+	prices_open = []
+	prices_high = []
+	prices_low = []
+	prices_close = []
+	volumes = []
+
+	for price_data in response.content.split('\n'):
+		
+		try:
+			code, date, price_open, price_high, price_low, price_close, vol, _ = price_data.split(',')
+		except:
+			continue
+
+		dates.append(date)
+		prices_open.append(float(price_open))
+		prices_high.append(float(price_high))
+		prices_low.append(float(price_low))
+		prices_close.append(float(price_close))
+		volumes.append(float(vol))
+
+	if len(dates) is 0:
+		raise ValueError('failed to retrieve data')
+
+	return dates, prices_close
+
 def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresholds):
 
 	publishedMonths = {'soybean': ['X','K'], 'corn': ['K','Z'], 'wheat': ['K','Z']}
 
 	if monthCode[0] not in publishedMonths[assetType]: return;
-
-	date_list  = []
-	price_list = []
 
 	day, month, year = expirationDate.split('-')
 
@@ -62,24 +96,12 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 		year = int(year) + 1
 		year = str(year)
 
+	cropCodes = {'soybean': 'ZS', 'wheat':'ZW', 'corn': 'ZC'}
+
 	month = getMonthFromOptionCode(monthCode[0])
 
-	filename = 'data/'+assetType+'_'+month.lower()+'_'+year+'.json'
+	date_list, price_list = getPriceSeries(cropCodes[assetType], monthCode[0], str(year)[-2:])
 
-	if not os.path.isfile(filename):
-		print 'File '+filename+' ('+monthCode+') missing.'
-		return
-
-	with open(filename) as prices:
-		prices = find_between(prices.read(), '~m~{', '~m')
-		prices = json.loads('{'+prices)
-		prices = prices['p'][1]['s1']['s']
-		for priceData in prices:
-			timestamp, p_open, p_high, p_low, p_close, vol = priceData['v']
-			date = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
-			date_list.append(date)
-			price_list.append(p_close)
-	
 	monthToNumber = {v: k for k,v in enumerate(calendar.month_abbr)}
 
 	day, month2, _ = expirationDate.split('-')
@@ -95,9 +117,9 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 	else:
 		convertTometricTon = 36.7437;
 
-	price_list = [p * convertTometricTon / 100 for p in price_list]
-	thresholds = [p * convertTometricTon / 100 for p in thresholds]
-	underlyingPrice = float(underlyingPrice) * convertTometricTon / 100
+	price_list = [p * convertTometricTon / 100.0 for p in price_list]
+	thresholds = [p * convertTometricTon / 100.0 for p in thresholds]
+	underlyingPrice = float(underlyingPrice) * convertTometricTon / 100.0
 
 	# time series
 	#sharey=True

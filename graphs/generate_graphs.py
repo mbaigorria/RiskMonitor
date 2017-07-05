@@ -123,12 +123,15 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 	thresholds = [p * convertTometricTon / 100.0 for p in thresholds]
 	underlyingPrice = float(underlyingPrice) * convertTometricTon / 100.0
 
+	price_list = price_list[:-1]
+	date_list = date_list[:-1]
+
 	# time series
 	#sharey=True
 	fig, axes = plt.subplots(ncols=2, gridspec_kw = {'width_ratios':[6, 1]})
 	axes[0].plot_date(x=date_list, y=price_list, fmt="-", color="#FBBD16")
 	axes[0].xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-	axes[0].xaxis.set_major_locator(mdates.DayLocator(interval=len(date_list)/6))
+	axes[0].xaxis.set_major_locator(mdates.DayLocator(interval=len(date_list)/5))
 	# axes[0].set_xlim(right=base+datetime.timedelta(days=10))
 	axes[0].set_xlim(left=date_list[0], right=expirationDate)
 

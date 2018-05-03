@@ -14,7 +14,8 @@ import numpy as np
 
 import datetime
 import calendar
-import seaborn
+import seaborn as sns
+sns.set()
 
 import csv
 import json
@@ -104,10 +105,9 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 
 	date_list, price_list = getPriceSeries(cropCodes[assetType], monthCode[0], str(year)[-2:])
 
-	monthToNumber = {v: k for k,v in enumerate(calendar.month_abbr)}
-
+	monthToNumber = {'': 0, 'Mar': 3, 'Feb': 2, 'Aug': 8, 'Sep': 9, 'Apr': 4, 'Jun': 6, 'Jul': 7, 'Jan': 1, 'May': 5, 'Nov': 11, 'Dec': 12, 'Oct': 10}
 	day, month2, _ = expirationDate.split('-')
-	expirationDate = year+'-'+str(monthToNumber[month2])+'-'+day
+	expirationDate = year+'-'+str(monthToNumber[month2.title()])+'-'+day
 
 	assetTypeToSpanish = {'soybean': 'soja', 'wheat': 'trigo', 'corn': u'maíz'}
 
@@ -128,10 +128,10 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 
 	# time series
 	#sharey=True
-	fig, axes = plt.subplots(ncols=2, gridspec_kw = {'width_ratios':[6, 1]})
+	fig, axes = plt.subplots(ncols=2, gridspec_kw = {'width_ratios':[9, 2]})
 	axes[0].plot_date(x=date_list, y=price_list, fmt="-", color="#FBBD16")
 	axes[0].xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-	axes[0].xaxis.set_major_locator(mdates.DayLocator(interval=len(date_list)/5))
+	axes[0].xaxis.set_major_locator(mdates.DayLocator(interval=int(math.log(len(date_list))*8)))
 	# axes[0].set_xlim(right=base+datetime.timedelta(days=10))
 	axes[0].set_xlim(left=date_list[0], right=expirationDate)
 
@@ -193,18 +193,28 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 
 	print 'Graph generated! '+ assetType+'_'+month.lower()+'_'+year
 
+def normalize_date(expirationDate):
+	date, month, year = expirationDate.split('-')
+
+	if int(year) < 2000:
+		year = 2000 + int(year)
+
+	month = month.title()
+
+	return '-'.join([date, month, str(year)])
+
 if __name__=="__main__":
 
 	print 'Generating graphs'
 
 	basepath = os.path.dirname(__file__)
 	filepath = os.path.abspath(os.path.join(basepath, '..', 'loadData.csv'))
-	csvfile = open(filepath, 'r')
-	csvreader = csv.reader(csvfile, delimiter=';')
+	csvfile = open(filepath, 'rU')
+	csvreader = csv.reader(csvfile, delimiter=';',dialect = 'excel')
 
 	for row in csvreader:
 		_, expirationDate, underlyingPrice, monthCode, assetType, finalJson, optionJson = row
-		data = json.loads(finalJson)
+                data = json.loads(finalJson)
 		cut_points = data['indicator']['cut_points']
 		thresholds = [price for price, density in cut_points]
-		generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresholds)
+		generateGraph(monthCode, assetType, normalize_date(expirationDate), underlyingPrice, thresholds)

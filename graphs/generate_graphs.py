@@ -91,13 +91,13 @@ def generateGraph(monthCode, assetType, expirationDate, underlyingPrice, thresho
 
 	publishedMonths = {'soybean': ['X','K'], 'corn': ['K','Z'], 'wheat': ['K','Z']}
 
-	if monthCode[0] not in publishedMonths[assetType]: return;
+	if monthCode[0] not in publishedMonths[assetType]:
+		print 'Skipping:', monthCode, assetType, expirationDate
+		return;
+	else: 
+		print 'Generating:', monthCode, assetType, expirationDate
 
 	day, month, year = expirationDate.split('-')
-
-	if month == 'Dec':
-		year = int(year) + 1
-		year = str(year)
 
 	cropCodes = {'soybean': 'ZS', 'wheat':'ZW', 'corn': 'ZC'}
 
@@ -214,7 +214,7 @@ if __name__=="__main__":
 
 	for row in csvreader:
 		_, expirationDate, underlyingPrice, monthCode, assetType, finalJson, optionJson = row
-                data = json.loads(finalJson)
+		data = json.loads(finalJson)
 		cut_points = data['indicator']['cut_points']
 		thresholds = [price for price, density in cut_points]
 		generateGraph(monthCode, assetType, normalize_date(expirationDate), underlyingPrice, thresholds)

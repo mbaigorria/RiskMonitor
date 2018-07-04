@@ -53,20 +53,13 @@ function optionData = getDataFromCme(asset, select_option)
          error('Error: We are currently experiencing issues with our weekly options quotes showing stale data. We are working to have this fixed as soon as possible.');
     end
  
-    % In order to request the JSON price data, we must first build a 
+% In order to request the JSON price data, we must first build a 
     % sintactically corrrect request URL. This is built from the JSON
     % data in the original HTML.
     product_code = getProductCode(asset);
     url = strcat('http://www.cmegroup.com/CmeWS/mvc/Options/Categories/List/',num2str(product_code),'/G');
-    json = urlread(url, 'Timeout', TIMEOUT);
- 
-    % the site sometimes behaves badly. changes in the html or js object ruin
-    % the parsing.
-    try
-        rawStruct = loadjson(json);
-    catch exception
-        error('Error: Unable to load option data from JSON.');
-    end
+    display(url)
+    rawStruct = webread(url);
  
     % To unify the criteria to get the data from CME, we have an
     % issue with field names. This is from jsonlab toolbox:
@@ -112,15 +105,13 @@ function optionData = getDataFromCme(asset, select_option)
     try
         url = strcat('http://www.cmegroup.com/CmeWS/mvc/Quotes/Option/', ...
             num2str(optionProductId),'/G/',char(availableOptions{select_option,2}), '/ALL');
-        jsonString = urlread(url, 'Timeout', TIMEOUT);
+        rawStruct = webread(url, 'Timeout', TIMEOUT);
     catch
         disp(url);
         error('Error: CME seems to be down, failed to retrieve data!');
     end
-    
-    rawStruct = loadjson(jsonString);
  
-    underlyingFuture = rawStruct.underlyingFutureContractQuotes{1, 1}; % rename rawStruct for the underlying.
+    underlyingFuture = rawStruct.underlyingFutureContractQuotes; % rename rawStruct for the underlying.
  
     numberOfStrikes = length(rawStruct.optionContractQuotes);
  
@@ -135,9 +126,9 @@ function optionData = getDataFromCme(asset, select_option)
     expiration(1,1) = upper(expiration(1,1));
     
     url = strcat('http://www.cmegroup.com/CmeWS/mvc/ProductCalendar/Options/', num2str(optionProductId));
-    json = urlread(url, 'Timeout', TIMEOUT);
-    expirationStruct = loadjson(json);
-    expirationDate = expirationStruct{1}.calendarEntries{select_option}.expirationDate.dateOnlyLongFormat;
+    expirationStruct = webread(url, 'Timeout', TIMEOUT);
+    expirationDate = expirationStruct.calendarEntries(select_option).expirationDate.dateOnlyLongFormat;
+    
     expirationDate = strrep(expirationDate, ' ', '-');
     daysForExpiration = wrkdydif(date, expirationDate, length(holidays(date, expirationDate)));
  
@@ -153,26 +144,25 @@ function optionData = getDataFromCme(asset, select_option)
  
     % process raw data
     for i = 1:numberOfStrikes
- 
         % strike price
-        callData(i,1) = str2num(rawStruct.optionContractQuotes{1, i}.strikePrice);
-        putData(i,1)  = str2num(rawStruct.optionContractQuotes{1, i}.strikePrice);
+        callData(i,1) = str2num(rawStruct.optionContractQuotes(i).strikePrice);
+        putData(i,1)  = str2num(rawStruct.optionContractQuotes(i).strikePrice);
  
         % best bid
-        callData(i,2) = parsePrice(rawStruct.optionContractQuotes{1, i}.call.low);
-        putData(i,2)  = parsePrice(rawStruct.optionContractQuotes{1, i}.put.low);
+        callData(i,2) = parsePrice(rawStruct.optionContractQuotes(i).call.low);
+        putData(i,2)  = parsePrice(rawStruct.optionContractQuotes(i).put.low);
  
         % best offer
-        callData(i,3) = parsePrice(rawStruct.optionContractQuotes{1, i}.call.high);
-        putData(i,3)  = parsePrice(rawStruct.optionContractQuotes{1, i}.put.high);
+        callData(i,3) = parsePrice(rawStruct.optionContractQuotes(i).call.high);
+        putData(i,3)  = parsePrice(rawStruct.optionContractQuotes(i).put.high);
  
         % prior settle
-        callData(i,5) = parsePrice(rawStruct.optionContractQuotes{1, i}.call.priorSettle);
-        putData(i,5)  = parsePrice(rawStruct.optionContractQuotes{1, i}.put.priorSettle);
+        callData(i,5) = parsePrice(rawStruct.optionContractQuotes(i).call.priorSettle);
+        putData(i,5)  = parsePrice(rawStruct.optionContractQuotes(i).put.priorSettle);
         
         % volume
-        callData(i,6) =  str2num(strrep(rawStruct.optionContractQuotes{1, i}.call.volume, ',', ''));
-        putData(i,6)  =  str2num(strrep(rawStruct.optionContractQuotes{1, i}.put.volume, ',', ''));
+        callData(i,6) =  str2num(strrep(rawStruct.optionContractQuotes(i).call.volume, ',', ''));
+        putData(i,6)  =  str2num(strrep(rawStruct.optionContractQuotes(i).put.volume, ',', ''));
  
     end
     
